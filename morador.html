@@ -134,82 +134,143 @@ const API = "https://exaustores-production.up.railway.app"
 const token = localStorage.getItem("token")
 
 if(!token){
-
     window.location.href = "index.html"
-
 }
 
 async function carregar(){
 
-    const res = await fetch(`${API}/status`)
+    try{
 
-    const data = await res.json()
+        const res = await fetch(`${API}/status`)
 
-    const cards = document.getElementById("cards")
+        console.log("STATUS:", res)
 
-    cards.innerHTML = ""
+        const data = await res.json()
 
-    Object.entries(data.exaustores).forEach(([lado, ligado])=>{
+        console.log("DATA:", data)
 
-        cards.innerHTML += `
+        const cards =
+            document.getElementById("cards")
 
-        <div class="card">
+        cards.innerHTML = ""
 
-            <h2>Lado ${lado}</h2>
+        if(!data.exaustores){
 
-            <img src="${
-                ligado
-                ? 'img/Exaustor_On.png'
-                : 'img/Exaustor_Off.png'
-            }">
+            cards.innerHTML = `
+                <h2>
+                    Nenhum exaustor encontrado
+                </h2>
+            `
+            return
+        }
 
-            <div class="status ${
-                ligado
-                ? 'ligado'
-                : 'desligado'
-            }">
+        Object.entries(data.exaustores)
+        .forEach(([lado, ligado])=>{
 
-                ${
-                    ligado
-                    ? 'LIGADO'
-                    : 'DESLIGADO'
-                }
+            const imagem = ligado
+                ? "img/Exaustor_On.png"
+                : "img/Exaustor_Off.png"
+
+            const texto = ligado
+                ? "LIGADO"
+                : "DESLIGADO"
+
+            cards.innerHTML += `
+
+            <div class="card">
+
+                <h2>
+                    Exaustor Lado ${lado}
+                </h2>
+
+                <img
+                    src="${imagem}"
+                    style="
+                        width:120px;
+                        margin-bottom:20px;
+                    "
+                >
+
+                <div class="
+                    status
+                    ${ligado ? 'ligado':'desligado'}
+                ">
+
+                    ${texto}
+
+                </div>
+
+                <button onclick="
+                    toggle(
+                        '${lado}',
+                        ${ligado}
+                    )
+                ">
+
+                    ${
+                        ligado
+                        ? "Desligar"
+                        : "Ligar"
+                    }
+
+                </button>
+
+            </div>
+            `
+        })
+
+    }catch(e){
+
+        console.log("ERRO:", e)
+
+        document.getElementById("cards")
+        .innerHTML = `
+
+            <div class="card">
+
+                <h2>
+                    Erro ao conectar backend
+                </h2>
 
             </div>
 
-            <button onclick="toggle(${lado}, ${ligado})">
-
-                ${
-                    ligado
-                    ? 'Desligar'
-                    : 'Ligar'
-                }
-
-            </button>
-
-        </div>
         `
-    })
-
+    }
 }
 
 async function toggle(lado, ligado){
 
-    await fetch(`${API}/acao`,{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + token
-        },
-        body:JSON.stringify({
-            acao: ligado
-                ? "desligar"
-                : "ligar"
+    try{
+
+        const acao = ligado
+            ? "desligar"
+            : "ligar"
+
+        const res = await fetch(`${API}/acao`,{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+
+            body:JSON.stringify({
+                acao:acao
+            })
         })
-    })
 
-    carregar()
+        const data = await res.json()
 
+        console.log(data)
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+
+    }
 }
 
 function logout(){
@@ -217,7 +278,6 @@ function logout(){
     localStorage.clear()
 
     window.location.href = "index.html"
-
 }
 
 carregar()
