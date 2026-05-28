@@ -362,21 +362,57 @@ async function carregar(){
         // =========================
         // CONFIGURAÇÕES
         // =========================
-
+        
         document.getElementById("configs")
         .innerHTML = `
-
-            <p>
-                <b>Tempo de alerta:</b>
-                ${config.alerta_horas} horas
-            </p>
-
-            <p>
-                <b>Tempo máximo:</b>
-                ${config.max_horas_morador} horas
-            </p>
+        
+            <div style="
+                margin-bottom:25px;
+                text-align:left;
+            ">
+        
+                <label>
+                    <b>Tempo de Alerta (horas)</b>
+                </label>
+        
+                <input
+                    type="number"
+                    id="alertaHoras"
+                    value="${config.alerta_horas}"
+                >
+        
+                <button
+                    class="salvar"
+                    onclick="salvarAlerta()"
+                >
+                    Salvar Tempo de Alerta
+                </button>
+        
+            </div>
+        
+            <div style="
+                text-align:left;
+            ">
+        
+                <label>
+                    <b>Tempo Máximo Morador (horas)</b>
+                </label>
+        
+                <input
+                    type="number"
+                    id="maxHoras"
+                    value="${config.max_horas_morador}"
+                >
+        
+                <button
+                    class="salvar"
+                    onclick="salvarMaxHoras()"
+                >
+                    Salvar Tempo Máximo
+                </button>
+        
+            </div>
         `
-
         // =========================
         // APARTAMENTOS
         // =========================
@@ -475,7 +511,77 @@ async function desligar(lado){
         console.log(e)
     }
 }
+async function salvarAlerta(){
 
+    const horas =
+        document.getElementById(
+            "alertaHoras"
+        ).value
+
+    try{
+
+        await fetch(
+            `${API}/sindico/config/alerta`,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":
+                    "Bearer " + token
+                },
+
+                body:JSON.stringify({
+                    horas:Number(horas)
+                })
+            }
+        )
+
+        alert("Tempo de alerta atualizado!")
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
+
+async function salvarMaxHoras(){
+
+    const horas =
+        document.getElementById(
+            "maxHoras"
+        ).value
+
+    try{
+
+        await fetch(
+            `${API}/sindico/config/max-horas`,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":
+                    "Bearer " + token
+                },
+
+                body:JSON.stringify({
+                    horas:Number(horas)
+                })
+            }
+        )
+
+        alert("Tempo máximo atualizado!")
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
 async function salvarUsuario(){
 
     const usuario =
