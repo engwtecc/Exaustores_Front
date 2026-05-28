@@ -7,15 +7,16 @@
 
 <title>Síndico</title>
 
-<link rel="stylesheet" href="style.css">
-
 <style>
 
 body{
+    margin:0;
+    font-family:Arial;
     background:#f2f4ef;
 }
 
 .topo{
+
     width:100%;
     height:80px;
 
@@ -27,6 +28,11 @@ body{
     justify-content:space-between;
 
     padding:0 30px;
+    box-sizing:border-box;
+}
+
+.topo h1{
+    margin:0;
 }
 
 .topo button{
@@ -41,53 +47,66 @@ body{
     color:#5f8136;
 
     font-weight:bold;
-
     cursor:pointer;
 }
 
 .container{
-    padding:40px;
+
+    width:100%;
+    padding:30px;
+    box-sizing:border-box;
+}
+
+.grid{
 
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
-    gap:30px;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
 }
 
 .card{
-    background:white;
 
+    background:white;
     border-radius:25px;
 
-    padding:30px;
+    padding:25px;
 
     box-shadow:0 5px 20px rgba(0,0,0,0.08);
+
+    text-align:center;
 }
 
 .card h2{
     color:#5f8136;
+}
+
+.card img{
+    width:120px;
+    margin:20px 0;
+}
+
+.status{
+
+    font-size:22px;
+    font-weight:bold;
     margin-bottom:20px;
 }
 
-input{
-    width:100%;
-    height:50px;
-
-    border:1px solid #ccc;
-    border-radius:10px;
-
-    padding-left:15px;
-
-    margin-bottom:15px;
-
-    font-size:16px;
+.ligado{
+    color:green;
 }
 
-button{
+.desligado{
+    color:red;
+}
+
+.card button{
+
     width:100%;
     height:50px;
 
     border:none;
-    border-radius:10px;
+    border-radius:12px;
 
     background:#5f8136;
     color:white;
@@ -98,12 +117,64 @@ button{
     cursor:pointer;
 }
 
-.status-item{
+.config-box,
+.ativos-box,
+.usuario-box{
+
+    background:white;
+    border-radius:25px;
+
+    padding:25px;
+
+    margin-top:30px;
+
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+input,
+select{
+
+    width:100%;
+    height:45px;
+
+    margin-top:10px;
     margin-bottom:15px;
 
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    padding:10px;
+
+    border:1px solid #ccc;
+    border-radius:10px;
+
+    box-sizing:border-box;
+}
+
+.salvar{
+
+    width:100%;
+    height:50px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#5f8136;
+    color:white;
+
+    font-size:18px;
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.item-ativo{
+
+    padding:15px;
+    border-bottom:1px solid #ddd;
+}
+
+.usuario-item{
+
+    padding:10px;
+    border-bottom:1px solid #ddd;
 }
 
 </style>
@@ -124,35 +195,68 @@ button{
 
 <div class="container">
 
-    <div class="card">
+    <!-- EXAUSTORES -->
+    <div class="grid" id="cards"></div>
 
-        <h2>Status dos Exaustores</h2>
+    <!-- CONFIG -->
+    <div class="config-box">
 
-        <div id="status"></div>
+        <h2>Configurações</h2>
 
-    </div>
-
-    <div class="card">
-
-        <h2>Tempo de Alerta</h2>
-
-        <input type="number" id="alerta">
-
-        <button onclick="salvarAlerta()">
-            Salvar
-        </button>
+        <div id="configs"></div>
 
     </div>
 
-    <div class="card">
+    <!-- APARTAMENTOS -->
+    <div class="ativos-box">
 
-        <h2>Tempo Máximo</h2>
+        <h2>Apartamentos Solicitando</h2>
 
-        <input type="number" id="maximo">
+        <div id="ativos"></div>
 
-        <button onclick="salvarMaximo()">
-            Salvar
+    </div>
+
+    <!-- CADASTRO -->
+    <div class="usuario-box">
+
+        <h2>Cadastrar Usuário</h2>
+
+        <input
+            type="text"
+            id="novoUsuario"
+            placeholder="Usuário / Apartamento"
+        >
+
+        <input
+            type="password"
+            id="novaSenha"
+            placeholder="Senha"
+        >
+
+        <select id="tipoUsuario">
+
+            <option value="morador">
+                Morador
+            </option>
+
+            <option value="sindico">
+                Síndico
+            </option>
+
+        </select>
+
+        <button
+            class="salvar"
+            onclick="salvarUsuario()"
+        >
+            Salvar Usuário
         </button>
+
+        <br><br>
+
+        <h2>Usuários Cadastrados</h2>
+
+        <div id="usuarios"></div>
 
     </div>
 
@@ -160,98 +264,264 @@ button{
 
 <script>
 
-const API = "https://exaustores-production.up.railway.app"
+const API =
+"https://exaustores-production.up.railway.app"
 
 const token = localStorage.getItem("token")
 
 if(!token){
 
     window.location.href = "index.html"
-
 }
 
 async function carregar(){
 
-    const res = await fetch(`${API}/status`)
+    try{
 
-    const data = await res.json()
+        // STATUS
+        const resStatus = await fetch(
+            `${API}/status`
+        )
 
-    const div = document.getElementById("status")
+        const status = await resStatus.json()
 
-    div.innerHTML = ""
-
-    Object.entries(data.exaustores).forEach(([lado, ligado])=>{
-
-        div.innerHTML += `
-
-        <div class="status-item">
-
-            <span>
-                Lado ${lado}
-            </span>
-
-            <strong style="
-                color:${ligado ? 'green':'red'}
-            ">
-
-                ${
-                    ligado
-                    ? 'LIGADO'
-                    : 'DESLIGADO'
+        // CONFIG
+        const resConfig = await fetch(
+            `${API}/sindico/config`,
+            {
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
                 }
+            }
+        )
 
-            </strong>
+        const config = await resConfig.json()
 
-        </div>
+        // USUÁRIOS
+        const resUsuarios = await fetch(
+            `${API}/sindico/usuarios`,
+            {
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
+
+        const usuarios =
+            await resUsuarios.json()
+
+        // =========================
+        // EXAUSTORES
+        // =========================
+
+        const cards =
+            document.getElementById("cards")
+
+        cards.innerHTML = ""
+
+        Object.entries(status.exaustores)
+        .forEach(([lado, ligado])=>{
+
+            const imagem = ligado
+                ? "img/Exaustor_On.png"
+                : "img/Exaustor_Off.png"
+
+            const texto = ligado
+                ? "LIGADO"
+                : "DESLIGADO"
+
+            cards.innerHTML += `
+
+            <div class="card">
+
+                <h2>
+                    Exaustor Lado ${lado}
+                </h2>
+
+                <img src="${imagem}">
+
+                <div class="
+                    status
+                    ${ligado ? 'ligado':'desligado'}
+                ">
+                    ${texto}
+                </div>
+
+                <button onclick="
+                    desligar('${lado}')
+                ">
+                    Desligar
+                </button>
+
+            </div>
+            `
+        })
+
+        // =========================
+        // CONFIGURAÇÕES
+        // =========================
+
+        document.getElementById("configs")
+        .innerHTML = `
+
+            <p>
+                <b>Tempo de alerta:</b>
+                ${config.alerta_horas} horas
+            </p>
+
+            <p>
+                <b>Tempo máximo:</b>
+                ${config.max_horas_morador} horas
+            </p>
         `
-    })
 
+        // =========================
+        // APARTAMENTOS
+        // =========================
+
+        let htmlAtivos = ""
+
+        status.ativos.forEach(a=>{
+
+            const minutos =
+                Math.floor(
+                    a.tempo_segundos / 60
+                )
+
+            htmlAtivos += `
+
+            <div class="item-ativo">
+
+                <b>Apartamento:</b>
+                ${a.apartamento}
+
+                <br>
+
+                <b>Lado:</b>
+                ${a.lado}
+
+                <br>
+
+                <b>Tempo:</b>
+                ${minutos} min
+
+            </div>
+            `
+        })
+
+        if(htmlAtivos === ""){
+
+            htmlAtivos = `
+                <p>
+                    Nenhum apartamento solicitando
+                </p>
+            `
+        }
+
+        document.getElementById("ativos")
+        .innerHTML = htmlAtivos
+
+        // =========================
+        // USUÁRIOS
+        // =========================
+
+        let htmlUsuarios = ""
+
+        usuarios.forEach(u=>{
+
+            htmlUsuarios += `
+
+            <div class="usuario-item">
+
+                <b>${u.usuario}</b>
+                - ${u.tipo}
+
+            </div>
+            `
+        })
+
+        document.getElementById("usuarios")
+        .innerHTML = htmlUsuarios
+
+    }catch(e){
+
+        console.log(e)
+
+    }
 }
 
-async function salvarAlerta(){
+async function desligar(lado){
 
-    const horas =
-        document.getElementById("alerta").value
+    try{
 
-    await fetch(`${API}/sindico/config/alerta`,{
+        await fetch(
+            `${API}/sindico/desligar/${lado}`,
+            {
+                method:"POST",
 
-        method:"POST",
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
 
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + token
-        },
+        carregar()
 
-        body:JSON.stringify({
-            horas:Number(horas)
-        })
-    })
+    }catch(e){
 
-    alert("Tempo alerta atualizado")
-
+        console.log(e)
+    }
 }
 
-async function salvarMaximo(){
+async function salvarUsuario(){
 
-    const horas =
-        document.getElementById("maximo").value
+    const usuario =
+        document.getElementById(
+            "novoUsuario"
+        ).value
 
-    await fetch(`${API}/sindico/config/max-horas`,{
+    const senha =
+        document.getElementById(
+            "novaSenha"
+        ).value
 
-        method:"POST",
+    const tipo =
+        document.getElementById(
+            "tipoUsuario"
+        ).value
 
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + token
-        },
+    try{
 
-        body:JSON.stringify({
-            horas:Number(horas)
-        })
-    })
+        await fetch(
+            `${API}/sindico/usuario`,
+            {
+                method:"POST",
 
-    alert("Tempo máximo atualizado")
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":
+                    "Bearer " + token
+                },
 
+                body:JSON.stringify({
+                    usuario,
+                    senha,
+                    tipo
+                })
+            }
+        )
+
+        alert("Usuário salvo!")
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
 }
 
 function logout(){
@@ -259,7 +529,6 @@ function logout(){
     localStorage.clear()
 
     window.location.href = "index.html"
-
 }
 
 carregar()
