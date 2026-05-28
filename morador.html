@@ -7,17 +7,19 @@
 
 <title>Morador</title>
 
-<link rel="stylesheet" href="style.css">
-
 <style>
 
 body{
+    margin:0;
+    font-family:Arial;
     background:#f2f4ef;
 }
 
 .topo{
+
     width:100%;
     height:80px;
+
     background:#5f8136;
     color:white;
 
@@ -26,13 +28,15 @@ body{
     justify-content:space-between;
 
     padding:0 30px;
+    box-sizing:border-box;
 }
 
 .topo h1{
-    font-size:28px;
+    margin:0;
 }
 
 .topo button{
+
     width:140px;
     height:45px;
 
@@ -43,21 +47,28 @@ body{
     color:#5f8136;
 
     font-weight:bold;
-
     cursor:pointer;
 }
 
-.container-morador{
+.container{
+
     width:100%;
     padding:40px;
 
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:30px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+
+    box-sizing:border-box;
 }
 
 .card{
+
+    width:100%;
+    max-width:420px;
+
     background:white;
+
     border-radius:25px;
 
     padding:30px;
@@ -69,18 +80,19 @@ body{
 
 .card h2{
     color:#5f8136;
-    margin-bottom:20px;
 }
 
 .card img{
-    width:120px;
-    margin-bottom:20px;
+    width:140px;
+    margin:25px 0;
 }
 
 .status{
-    font-size:22px;
-    margin-bottom:20px;
+
+    font-size:24px;
     font-weight:bold;
+
+    margin-bottom:25px;
 }
 
 .ligado{
@@ -92,8 +104,9 @@ body{
 }
 
 .card button{
+
     width:100%;
-    height:50px;
+    height:55px;
 
     border:none;
     border-radius:12px;
@@ -101,10 +114,23 @@ body{
     background:#5f8136;
     color:white;
 
-    font-size:18px;
+    font-size:20px;
     font-weight:bold;
 
     cursor:pointer;
+}
+
+.info{
+
+    margin-top:25px;
+
+    background:#f2f4ef;
+
+    padding:15px;
+
+    border-radius:15px;
+
+    text-align:left;
 }
 
 </style>
@@ -115,7 +141,9 @@ body{
 
 <div class="topo">
 
-    <h1>Controle de Exaustores</h1>
+    <h1>
+        Controle de Exaustor
+    </h1>
 
     <button onclick="logout()">
         Sair
@@ -123,161 +151,232 @@ body{
 
 </div>
 
-<div class="container-morador" id="cards">
+<div class="container">
+
+    <div id="conteudo"></div>
 
 </div>
 
 <script>
 
-const API = "https://exaustores-production.up.railway.app"
+const API =
+"https://exaustores-production.up.railway.app"
 
-const token = localStorage.getItem("token")
+const token =
+localStorage.getItem("token")
 
 if(!token){
-    window.location.href = "index.html"
+
+    window.location.href =
+    "index.html"
 }
+
+// ========================================
+// DESCOBRE A PRUMADA DO APARTAMENTO
+// ========================================
+
+function pegarLadoApartamento(apto){
+
+    const texto = apto.padStart(4,"0")
+
+    return Number(
+        texto.substring(2,4)
+    )
+}
+
+// ========================================
+// DECODIFICA TOKEN
+// ========================================
+
+function parseJwt(token){
+
+    try{
+
+        return JSON.parse(
+            atob(
+                token.split('.')[1]
+            )
+        )
+
+    }catch(e){
+
+        return null
+    }
+}
+
+const payload = parseJwt(token)
+
+const apartamento = payload.sub
+
+const ladoApartamento =
+pegarLadoApartamento(apartamento)
+
+// ========================================
+// CARREGAR
+// ========================================
 
 async function carregar(){
 
     try{
 
-        const res = await fetch(`${API}/status`)
+        const res =
+            await fetch(`${API}/status`)
 
-        console.log("STATUS:", res)
+        const data =
+            await res.json()
 
-        const data = await res.json()
+        const ligado =
+            data.exaustores[ladoApartamento]
 
-        console.log("DATA:", data)
+        // verifica se ESTE apartamento
+        // está solicitando
 
-        const cards =
-            document.getElementById("cards")
+        const minhaSolicitacao =
+            data.ativos.find(
+                a =>
+                a.apartamento ==
+                apartamento
+            )
 
-        cards.innerHTML = ""
+        const solicitando =
+            !!minhaSolicitacao
 
-        if(!data.exaustores){
+        const imagem = ligado
+            ? "img/Exaustor_On.png"
+            : "img/Exaustor_Off.png"
 
-            cards.innerHTML = `
-                <h2>
-                    Nenhum exaustor encontrado
-                </h2>
-            `
-            return
-        }
+        const texto = ligado
+            ? "LIGADO"
+            : "DESLIGADO"
 
-        Object.entries(data.exaustores)
-        .forEach(([lado, ligado])=>{
+        const html = `
 
-            const imagem = ligado
-                ? "img/Exaustor_On.png"
-                : "img/Exaustor_Off.png"
+        <div class="card">
 
-            const texto = ligado
-                ? "LIGADO"
-                : "DESLIGADO"
+            <h2>
+                Exaustor Prumada
+                ${ladoApartamento}
+            </h2>
 
-            cards.innerHTML += `
+            <img src="${imagem}">
 
-            <div class="card">
+            <div class="
+                status
+                ${ligado ? 'ligado':'desligado'}
+            ">
+                ${texto}
+            </div>
 
-                <h2>
-                    Exaustor Lado ${lado}
-                </h2>
+            <button onclick="
+                toggle(${solicitando})
+            ">
 
-                <img
-                    src="${imagem}"
-                    style="
-                        width:120px;
-                        margin-bottom:20px;
-                    "
-                >
+                ${
+                    solicitando
+                    ? "Cancelar Solicitação"
+                    : "Solicitar Ligação"
+                }
 
-                <div class="
-                    status
-                    ${ligado ? 'ligado':'desligado'}
-                ">
+            </button>
 
-                    ${texto}
+            <div class="info">
 
-                </div>
+                <b>Apartamento:</b>
+                ${apartamento}
 
-                <button onclick="
-                    toggle(
-                        '${lado}',
-                        ${ligado}
-                    )
-                ">
+                <br><br>
 
-                    ${
-                        ligado
-                        ? "Desligar"
-                        : "Ligar"
-                    }
+                <b>Prumada:</b>
+                ${ladoApartamento}
 
-                </button>
+                <br><br>
+
+                <b>Sua solicitação:</b>
+                ${
+                    solicitando
+                    ? "ATIVA"
+                    : "INATIVA"
+                }
 
             </div>
-            `
-        })
+
+        </div>
+        `
+
+        document.getElementById(
+            "conteudo"
+        ).innerHTML = html
 
     }catch(e){
 
-        console.log("ERRO:", e)
+        console.log(e)
 
-        document.getElementById("cards")
-        .innerHTML = `
+        document.getElementById(
+            "conteudo"
+        ).innerHTML = `
 
-            <div class="card">
+        <div class="card">
 
-                <h2>
-                    Erro ao conectar backend
-                </h2>
+            <h2>
+                Erro ao conectar backend
+            </h2>
 
-            </div>
-
+        </div>
         `
     }
 }
 
-async function toggle(lado, ligado){
+// ========================================
+// LIGAR / DESLIGAR
+// ========================================
+
+async function toggle(solicitando){
 
     try{
 
-        const acao = ligado
+        const acao =
+            solicitando
             ? "desligar"
             : "ligar"
 
-        const res = await fetch(`${API}/acao`,{
+        await fetch(
+            `${API}/acao`,
+            {
 
-            method:"POST",
+                method:"POST",
 
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Bearer " + token
-            },
+                headers:{
+                    "Content-Type":
+                    "application/json",
 
-            body:JSON.stringify({
-                acao:acao
-            })
-        })
+                    "Authorization":
+                    "Bearer " + token
+                },
 
-        const data = await res.json()
-
-        console.log(data)
+                body:JSON.stringify({
+                    acao
+                })
+            }
+        )
 
         carregar()
 
     }catch(e){
 
         console.log(e)
-
     }
 }
+
+// ========================================
+// LOGOUT
+// ========================================
 
 function logout(){
 
     localStorage.clear()
 
-    window.location.href = "index.html"
+    window.location.href =
+    "index.html"
 }
 
 carregar()
