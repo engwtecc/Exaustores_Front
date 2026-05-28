@@ -58,9 +58,18 @@ body{
 }
 
 .grid{
+    width:100%;
+    max-width:1200px;
+
+    margin:auto;
 
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(320px,420px));
+
+    justify-content:center;
+
     gap:25px;
 }
 
@@ -639,7 +648,24 @@ function logout(){
 
 carregar()
 
-setInterval(carregar,5000)
+setInterval(()=>{
+
+    const alerta =
+        document.activeElement.id === "alertaHoras"
+
+    const maximo =
+        document.activeElement.id === "maxHoras"
+
+    const usuario =
+        document.activeElement.id === "novoUsuario"
+
+    if(alerta || maximo || usuario){
+        return
+    }
+
+    carregar()
+
+},5000)
 
 </script>
 
