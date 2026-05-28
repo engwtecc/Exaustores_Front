@@ -328,6 +328,11 @@ select{
             id="novaSenha"
             placeholder="Senha"
         >
+        <input
+            type="text"
+            id="telefone"
+            placeholder="Telefone celular"
+        >
 
         <select id="tipoUsuario">
 
@@ -540,12 +545,36 @@ async function carregar(){
         usuarios.forEach(u=>{
 
             htmlUsuarios += `
-
+            
             <div class="usuario-item">
-
+            
                 <b>${u.usuario}</b>
                 - ${u.tipo}
-
+            
+                <br>
+            
+                📱 ${u.telefone || "-"}
+            
+                <br><br>
+            
+                <button onclick="
+                    editarUsuario(
+                        '${u.usuario}',
+                        '${u.tipo}',
+                        '${u.telefone || ""}'
+                    )
+                ">
+                    Editar
+                </button>
+            
+                <button onclick="
+                    excluirUsuario(
+                        '${u.usuario}'
+                    )
+                ">
+                    Excluir
+                </button>
+            
             </div>
             `
         })
@@ -678,6 +707,11 @@ async function salvarUsuario(){
             "tipoUsuario"
         ).value
 
+    const telefone =
+        document.getElementById(
+            "telefone"
+        ).value
+
     try{
 
         await fetch(
@@ -694,7 +728,8 @@ async function salvarUsuario(){
                 body:JSON.stringify({
                     usuario,
                     senha,
-                    tipo
+                    tipo,
+                    telefone
                 })
             }
         )
@@ -709,6 +744,10 @@ async function salvarUsuario(){
             "novaSenha"
         ).value = ""
 
+        document.getElementById(
+            "telefone"
+        ).value = ""
+
         carregar()
 
     }catch(e){
@@ -717,6 +756,56 @@ async function salvarUsuario(){
     }
 }
 
+    function editarUsuario(
+    usuario,
+    tipo,
+    telefone
+){
+
+    document.getElementById(
+        "novoUsuario"
+    ).value = usuario
+
+    document.getElementById(
+        "tipoUsuario"
+    ).value = tipo
+
+    document.getElementById(
+        "telefone"
+    ).value = telefone
+}
+
+async function excluirUsuario(usuario){
+
+    if(
+        !confirm(
+            "Excluir usuário?"
+        )
+    ){
+        return
+    }
+
+    try{
+
+        await fetch(
+            `${API}/sindico/usuario/${usuario}`,
+            {
+                method:"DELETE",
+
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
 function logout(){
 
     localStorage.clear()
