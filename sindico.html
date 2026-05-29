@@ -455,11 +455,36 @@ async function carregar(){
                     ${texto}
                 </div>
 
-                <button onclick="
-                    desligar('${lado}')
+                <div style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:10px;
                 ">
-                    Desligar
-                </button>
+                
+                    <button onclick="
+                        ligarManual('${lado}')
+                    ">
+                        Ligar Manual
+                    </button>
+                
+                    <button onclick="
+                        desligarManual('${lado}')
+                    ">
+                        Desligar Manual
+                    </button>
+                
+                    <button
+                        style="
+                            background:#c0392b;
+                        "
+                        onclick="
+                            cancelarPedidos('${lado}')
+                        "
+                    >
+                        Cancelar Pedidos
+                    </button>
+                
+                </div>
 
             </div>
             `
@@ -590,12 +615,12 @@ async function carregar(){
     }
 }
 
-async function desligar(lado){
+async function ligarManual(lado){
 
     try{
 
         await fetch(
-            `${API}/sindico/desligar/${lado}`,
+            `${API}/sindico/ligar-manual/${lado}`,
             {
                 method:"POST",
 
@@ -614,6 +639,61 @@ async function desligar(lado){
     }
 }
 
+async function desligarManual(lado){
+
+    try{
+
+        await fetch(
+            `${API}/sindico/desligar-manual/${lado}`,
+            {
+                method:"POST",
+
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
+
+async function cancelarPedidos(lado){
+
+    if(
+        !confirm(
+            "Cancelar todos os pedidos deste lado?"
+        )
+    ){
+        return
+    }
+
+    try{
+
+        await fetch(
+            `${API}/sindico/cancelar-pedidos/${lado}`,
+            {
+                method:"POST",
+
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
+
+        carregar()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
 async function salvarAlerta(){
 
     const horas =
