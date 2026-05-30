@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
 
 <meta charset="UTF-8">
@@ -16,10 +17,8 @@ body{
 }
 
 .topo{
-
     width:100%;
     height:80px;
-
     background:#5f8136;
     color:white;
 
@@ -31,12 +30,7 @@ body{
     box-sizing:border-box;
 }
 
-.topo h1{
-    margin:0;
-}
-
 .topo button{
-
     width:140px;
     height:45px;
 
@@ -51,21 +45,16 @@ body{
 }
 
 .container{
-
-    width:100%;
-    padding:40px;
+    padding:30px;
 
     display:flex;
     justify-content:center;
-    align-items:flex-start;
-
-    box-sizing:border-box;
 }
 
 .card{
 
     width:100%;
-    max-width:420px;
+    max-width:500px;
 
     background:white;
 
@@ -73,7 +62,7 @@ body{
 
     padding:30px;
 
-    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
 
     text-align:center;
 }
@@ -84,15 +73,13 @@ body{
 
 .card img{
     width:140px;
-    margin:25px 0;
+    margin:20px 0;
 }
 
 .status{
-
     font-size:24px;
     font-weight:bold;
-
-    margin-bottom:25px;
+    margin-bottom:20px;
 }
 
 .ligado{
@@ -103,7 +90,7 @@ body{
     color:red;
 }
 
-.card button{
+.btn{
 
     width:100%;
     height:55px;
@@ -114,7 +101,7 @@ body{
     background:#5f8136;
     color:white;
 
-    font-size:20px;
+    font-size:18px;
     font-weight:bold;
 
     cursor:pointer;
@@ -133,6 +120,33 @@ body{
     text-align:left;
 }
 
+.perfil{
+
+    margin-top:25px;
+
+    padding-top:20px;
+
+    border-top:1px solid #ddd;
+
+    text-align:left;
+}
+
+input{
+
+    width:100%;
+    height:45px;
+
+    margin-top:8px;
+    margin-bottom:15px;
+
+    padding:10px;
+
+    border:1px solid #ccc;
+    border-radius:10px;
+
+    box-sizing:border-box;
+}
+
 </style>
 
 </head>
@@ -141,9 +155,7 @@ body{
 
 <div class="topo">
 
-    <h1>
-        Controle de Exaustor
-    </h1>
+    <h1>Controle de Exaustor</h1>
 
     <button onclick="logout()">
         Sair
@@ -171,68 +183,63 @@ if(!token){
     "index.html"
 }
 
-// ========================================
-// DESCOBRE A PRUMADA DO APARTAMENTO
-// ========================================
+function parseJwt(token){
 
-function pegarLadoApartamento(apto){
-
-    const texto = apto.padStart(4,"0")
-
-    return Number(
-        texto.substring(2,4)
+    return JSON.parse(
+        atob(token.split('.')[1])
     )
 }
 
-// ========================================
-// DECODIFICA TOKEN
-// ========================================
+const payload =
+parseJwt(token)
 
-function parseJwt(token){
+const apartamento =
+payload.sub
 
-    try{
+function pegarLadoApartamento(apto){
 
-        return JSON.parse(
-            atob(
-                token.split('.')[1]
-            )
-        )
+    const txt =
+        apto.padStart(4,"0")
 
-    }catch(e){
-
-        return null
-    }
+    return Number(
+        txt.substring(2,4)
+    )
 }
-
-const payload = parseJwt(token)
-
-const apartamento = payload.sub
 
 const ladoApartamento =
 pegarLadoApartamento(apartamento)
-
-// ========================================
-// CARREGAR
-// ========================================
 
 async function carregar(){
 
     try{
 
-        const res =
+        const resStatus =
             await fetch(`${API}/status`)
 
-        const data =
-            await res.json()
+        const status =
+            await resStatus.json()
+
+        const resMe =
+            await fetch(
+                `${API}/me`,
+                {
+                    headers:{
+                        Authorization:
+                        "Bearer " + token
+                    }
+                }
+            )
+
+        const me =
+            await resMe.json()
 
         const ligado =
-            data.exaustores[ladoApartamento]
-
-        // verifica se ESTE apartamento
-        // está solicitando
+            status.exaustores[
+                ladoApartamento
+            ]
 
         const minhaSolicitacao =
-            data.ativos.find(
+            status.ativos.find(
                 a =>
                 a.apartamento ==
                 apartamento
@@ -240,14 +247,6 @@ async function carregar(){
 
         const solicitando =
             !!minhaSolicitacao
-
-        const imagem = ligado
-            ? "img/Exaustor_On.png"
-            : "img/Exaustor_Off.png"
-
-        const texto = ligado
-            ? "LIGADO"
-            : "DESLIGADO"
 
         const html = `
 
@@ -258,25 +257,38 @@ async function carregar(){
                 ${ladoApartamento}
             </h2>
 
-            <img src="${imagem}">
+            <img src="${
+                ligado
+                ? 'img/Exaustor_On.png'
+                : 'img/Exaustor_Off.png'
+            }">
 
             <div class="
                 status
-                ${ligado ? 'ligado':'desligado'}
+                ${
+                    ligado
+                    ? 'ligado'
+                    : 'desligado'
+                }
             ">
-                ${texto}
+                ${
+                    ligado
+                    ? 'LIGADO'
+                    : 'DESLIGADO'
+                }
             </div>
 
-            <button onclick="
+            <button
+                class="btn"
+                onclick="
                 toggle(${solicitando})
-            ">
-
+                "
+            >
                 ${
                     solicitando
                     ? "Cancelar Solicitação"
                     : "Solicitar Ligação"
                 }
-
             </button>
 
             <div class="info">
@@ -291,12 +303,49 @@ async function carregar(){
 
                 <br><br>
 
-                <b>Sua solicitação:</b>
+                <b>Sua Solicitação:</b>
+
                 ${
                     solicitando
                     ? "ATIVA"
                     : "INATIVA"
                 }
+
+            </div>
+
+            <div class="perfil">
+
+                <h3>
+                    Meu Cadastro
+                </h3>
+
+                <label>
+                    Nova Senha
+                </label>
+
+                <input
+                    type="password"
+                    id="senha"
+                    placeholder="Digite nova senha"
+                >
+
+                <label>
+                    WhatsApp
+                </label>
+
+                <input
+                    type="text"
+                    id="telefone"
+                    value="${me.telefone || ''}"
+                    placeholder="5562999999999"
+                >
+
+                <button
+                    class="btn"
+                    onclick="salvarPerfil()"
+                >
+                    Salvar Cadastro
+                </button>
 
             </div>
 
@@ -310,66 +359,76 @@ async function carregar(){
     }catch(e){
 
         console.log(e)
+    }
+}
 
+async function salvarPerfil(){
+
+    const senha =
         document.getElementById(
-            "conteudo"
-        ).innerHTML = `
+            "senha"
+        ).value
 
-        <div class="card">
+    const telefone =
+        document.getElementById(
+            "telefone"
+        ).value
 
-            <h2>
-                Erro ao conectar backend
-            </h2>
+    await fetch(
+        `${API}/me`,
+        {
+            method:"POST",
 
-        </div>
-        `
-    }
+            headers:{
+                "Content-Type":
+                "application/json",
+
+                Authorization:
+                "Bearer " + token
+            },
+
+            body:JSON.stringify({
+                senha,
+                telefone
+            })
+        }
+    )
+
+    alert(
+        "Cadastro atualizado!"
+    )
 }
 
-// ========================================
-// LIGAR / DESLIGAR
-// ========================================
+async function toggle(
+    solicitando
+){
 
-async function toggle(solicitando){
+    const acao =
+        solicitando
+        ? "desligar"
+        : "ligar"
 
-    try{
+    await fetch(
+        `${API}/acao`,
+        {
+            method:"POST",
 
-        const acao =
-            solicitando
-            ? "desligar"
-            : "ligar"
+            headers:{
+                "Content-Type":
+                "application/json",
 
-        await fetch(
-            `${API}/acao`,
-            {
+                Authorization:
+                "Bearer " + token
+            },
 
-                method:"POST",
+            body:JSON.stringify({
+                acao
+            })
+        }
+    )
 
-                headers:{
-                    "Content-Type":
-                    "application/json",
-
-                    "Authorization":
-                    "Bearer " + token
-                },
-
-                body:JSON.stringify({
-                    acao
-                })
-            }
-        )
-
-        carregar()
-
-    }catch(e){
-
-        console.log(e)
-    }
+    carregar()
 }
-
-// ========================================
-// LOGOUT
-// ========================================
 
 function logout(){
 
@@ -381,7 +440,10 @@ function logout(){
 
 carregar()
 
-setInterval(carregar,5000)
+setInterval(
+    carregar,
+    5000
+)
 
 </script>
 
