@@ -322,7 +322,24 @@ function fecharPerfil(){
 async function salvarPerfil(){
 
     try{
-
+        const telefone =
+        document.getElementById(
+            "telefone"
+        ).value.trim()
+        
+        if(telefone){
+        
+            if(!/^[0-9]{10,15}$/.test(telefone)){
+        
+                alert(
+                    "Telefone inválido.\n\n" +
+                    "Use apenas números.\n" +
+                    "Exemplo: 5562999710192"
+                )
+        
+                return
+            }
+        }
         await fetch(
             `${API}/perfil`,
             {
@@ -542,10 +559,21 @@ setInterval(()=>{
             placeholder="Nova senha"
         >
 
+        <label>
+            WhatsApp
+        </label>
+        
+        <small>
+            Formato internacional.
+            Exemplo Brasil:
+            5562999710192
+            (sem +, espaços ou traços)
+        </small>
+        
         <input
             type="text"
             id="telefone"
-            placeholder="WhatsApp"
+            placeholder="5562999710192"
         >
 
         <div class="acoes">
