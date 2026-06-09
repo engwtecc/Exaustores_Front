@@ -242,9 +242,19 @@ if(!token){
 
 function parseJwt(token){
 
-    return JSON.parse(
-        atob(token.split('.')[1])
-    )
+    try{
+
+        return JSON.parse(
+            atob(token.split('.')[1])
+        )
+
+    }catch(e){
+
+        localStorage.clear()
+
+        window.location.href =
+        "index.html"
+    }
 }
 
 const payload =
@@ -263,7 +273,7 @@ function pegarLadoApartamento(apto){
     )
 }
 
-const ladoApartamfento =
+const ladoApartamento =
 pegarLadoApartamento(apartamento)
 
 async function abrirPerfil(){
@@ -455,43 +465,6 @@ async function carregar(){
                     : "INATIVA"
                 }
 
-            </div>
-
-            <div class="perfil">
-
-                <h3>
-                    Meu Cadastro
-                </h3>
-
-                <label>
-                    Nova Senha
-                </label>
-
-                <input
-                    type="password"
-                    id="senha"
-                    placeholder="Digite nova senha"
-                >
-
-                <label>
-                    WhatsApp
-                </label>
-
-                <input
-                    type="text"
-                    id="telefone"
-                    value="${me.telefone || ''}"
-                    placeholder="5562999999999"
-                >
-
-                <button
-                    class="btn"
-                    onclick="salvarPerfil()"
-                >
-                    Salvar Cadastro
-                </button>
-
-            </div>
 
         </div>
         `
@@ -506,12 +479,6 @@ async function carregar(){
     }
 }
 
-async function salvarPerfil(){
-
-    const senha =
-        document.getElementById(
-            "senha"
-        ).value
 
     const telefone =
         document.getElementById(
