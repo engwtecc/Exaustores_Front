@@ -146,7 +146,56 @@ input{
 
     box-sizing:border-box;
 }
+.modal{
 
+    display:none;
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,0.5);
+
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-box{
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:20px;
+
+    width:350px;
+
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.modal-box input{
+
+    height:45px;
+
+    padding:10px;
+
+    border:1px solid #ccc;
+
+    border-radius:10px;
+}
+
+.acoes{
+
+    display:flex;
+
+    gap:10px;
+}
 </style>
 
 </head>
@@ -157,9 +206,17 @@ input{
 
     <h1>Controle de Exaustor</h1>
 
-    <button onclick="logout()">
-        Sair
-    </button>
+    <div>
+    
+        <button onclick="abrirPerfil()">
+            Perfil
+        </button>
+    
+        <button onclick="logout()">
+            Sair
+        </button>
+    
+    </div>
 
 </div>
 
@@ -195,7 +252,7 @@ parseJwt(token)
 
 const apartamento =
 payload.sub
-
+let editando = false
 function pegarLadoApartamento(apto){
 
     const txt =
@@ -206,9 +263,96 @@ function pegarLadoApartamento(apto){
     )
 }
 
-const ladoApartamento =
+const ladoApartamfento =
 pegarLadoApartamento(apartamento)
 
+async function abrirPerfil(){
+
+    editando = true
+
+    document.getElementById(
+        "modalPerfil"
+    ).style.display = "flex"
+
+    try{
+
+        const res =
+        await fetch(
+            `${API}/perfil`,
+            {
+                headers:{
+                    "Authorization":
+                    "Bearer " + token
+                }
+            }
+        )
+
+        const dados =
+        await res.json()
+
+        document.getElementById(
+            "telefone"
+        ).value =
+        dados.telefone || ""
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
+
+function fecharPerfil(){
+
+    editando = false
+
+    document.getElementById(
+        "modalPerfil"
+    ).style.display = "none"
+}
+async function salvarPerfil(){
+
+    try{
+
+        await fetch(
+            `${API}/perfil`,
+            {
+
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                    "application/json",
+
+                    "Authorization":
+                    "Bearer " + token
+                },
+
+                body:JSON.stringify({
+
+                    senha:
+                    document.getElementById(
+                        "novaSenha"
+                    ).value,
+
+                    telefone:
+                    document.getElementById(
+                        "telefone"
+                    ).value
+                })
+            }
+        )
+
+        alert(
+            "Perfil atualizado"
+        )
+
+        fecharPerfil()
+
+    }catch(e){
+
+        console.log(e)
+    }
+}
 async function carregar(){
 
     try{
@@ -440,12 +584,48 @@ function logout(){
 
 carregar()
 
-setInterval(
-    carregar,
-    5000
-)
+setInterval(()=>{
+
+    if(!editando){
+
+        carregar()
+    }
+
+},5000)
 
 </script>
+<div id="modalPerfil" class="modal">
 
+    <div class="modal-box">
+
+        <h2>Meu Perfil</h2>
+
+        <input
+            type="password"
+            id="novaSenha"
+            placeholder="Nova senha"
+        >
+
+        <input
+            type="text"
+            id="telefone"
+            placeholder="WhatsApp"
+        >
+
+        <div class="acoes">
+
+            <button onclick="salvarPerfil()">
+                Salvar
+            </button>
+
+            <button onclick="fecharPerfil()">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 </body>
 </html>
