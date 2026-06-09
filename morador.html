@@ -479,36 +479,6 @@ async function carregar(){
 }
 
 
-    const telefone =
-        document.getElementById(
-            "telefone"
-        ).value
-
-    await fetch(
-        `${API}/me`,
-        {
-            method:"POST",
-
-            headers:{
-                "Content-Type":
-                "application/json",
-
-                Authorization:
-                "Bearer " + token
-            },
-
-            body:JSON.stringify({
-                senha,
-                telefone
-            })
-        }
-    )
-
-    alert(
-        "Cadastro atualizado!"
-    )
-}
-
 async function toggle(
     solicitando
 ){
