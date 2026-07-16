@@ -1,81 +1,117 @@
 <!DOCTYPE html>
-
 <html lang="pt-br">
 
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Histórico</title>
 
 <style>
 
 body{
-
     margin:0;
-
     font-family:Arial;
-
     background:#f2f4ef;
-
 }
 
 .topo{
+
+    height:80px;
 
     background:#5f8136;
 
     color:white;
 
-    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 
+    padding:0 30px;
+
+    box-sizing:border-box;
+}
+
+.topo h1{
+    margin:0;
+}
+
+.topo button{
+
+    width:170px;
+    height:45px;
+
+    border:none;
+    border-radius:10px;
+
+    background:white;
+    color:#5f8136;
+
+    font-weight:bold;
+
+    cursor:pointer;
 }
 
 .container{
 
-    width:95%;
-
-    max-width:1200px;
+    max-width:1300px;
 
     margin:auto;
 
     padding:30px;
-
 }
 
-.filtro{
+.card{
 
-    display:flex;
+    background:white;
 
-    gap:10px;
+    border-radius:20px;
 
-    margin-bottom:20px;
+    padding:25px;
 
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
 }
 
 input{
 
-    height:40px;
+    width:250px;
+
+    height:45px;
 
     padding:10px;
 
+    border-radius:10px;
+
+    border:1px solid #ccc;
+
+    box-sizing:border-box;
 }
 
 button{
 
-    height:40px;
+    height:45px;
 
     padding:0 20px;
 
+    border:none;
+
+    border-radius:10px;
+
+    background:#5f8136;
+
+    color:white;
+
+    cursor:pointer;
 }
 
 table{
 
     width:100%;
 
+    margin-top:25px;
+
     border-collapse:collapse;
-
-    background:white;
-
 }
 
 th{
@@ -84,8 +120,7 @@ th{
 
     color:white;
 
-    padding:10px;
-
+    padding:12px;
 }
 
 td{
@@ -95,7 +130,21 @@ td{
     border-bottom:1px solid #ddd;
 
     text-align:center;
+}
 
+tr:hover{
+
+    background:#f7f7f7;
+}
+
+.desligado{
+    color:#c0392b;
+    font-weight:bold;
+}
+
+.manual{
+    color:#2980b9;
+    font-weight:bold;
 }
 
 </style>
@@ -108,119 +157,117 @@ td{
 
     <h1>Histórico de Solicitações</h1>
 
-    <div>
-
-        <button onclick="voltar()">
-            ← Painel
-        </button>
-
-        <button onclick="logout()">
-            Sair
-        </button>
-
-    </div>
+    <button onclick="voltar()">
+        ← Voltar ao Painel
+    </button>
 
 </div>
 
 <div class="container">
 
-<div class="filtro">
+<div class="card">
 
-<input
-id="apartamento"
-placeholder="Apartamento">
+    <h2>Pesquisar</h2>
 
-<button onclick="carregar()">
+    <input
+        id="apartamento"
+        placeholder="Apartamento">
 
-Pesquisar
+    <button onclick="carregar()">
+        Buscar
+    </button>
 
-</button>
+    <table>
+
+        <thead>
+
+        <tr>
+
+            <th>Apartamento</th>
+
+            <th>Andar</th>
+
+            <th>Lado</th>
+
+            <th>Ligou</th>
+
+            <th>Desligou</th>
+
+            <th>Duração</th>
+
+            <th>Tipo</th>
+
+        </tr>
+
+        </thead>
+
+        <tbody id="dados">
+
+        </tbody>
+
+    </table>
 
 </div>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Apartamento</th>
-
-<th>Lado</th>
-
-<th>Ligou</th>
-
-<th>Desligou</th>
-
-<th>Tipo</th>
-
-</tr>
-
-</thead>
-
-<tbody id="dados">
-
-</tbody>
-
-</table>
 
 </div>
 
 <script>
 
-const API="https://exaustores-production.up.railway.app"
+const API =
+"https://exaustores-production.up.railway.app"
 
-const token=localStorage.getItem("token")
+const token =
+localStorage.getItem("token")
 
-function data(ts){
+function voltar(){
 
-    if(!ts) return "-"
+    location.href="sindico.html"
+}
 
-    return new Date(ts*1000).toLocaleString()
+function formatarData(ts){
 
+    if(!ts)
+        return "-"
+
+    return new Date(
+        ts*1000
+    ).toLocaleString("pt-BR")
+}
+
+function formatarTempo(seg){
+
+    let h =
+    Math.floor(seg/3600)
+
+    let m =
+    Math.floor((seg%3600)/60)
+
+    return h+"h "+m+"min"
 }
 
 async function carregar(){
 
-    let apto=
+    const apto =
+    document.getElementById(
+        "apartamento"
+    ).value
 
-        document.getElementById(
+    const res =
+    await fetch(
 
-            "apartamento"
+        `${API}/sindico/historico?apartamento=${apto}`,
 
-        ).value
-
-    let url=
-
-        `${API}/sindico/historico`
-
-    if(apto)
-
-        url+=`?apartamento=${apto}`
-
-    const res=
-
-        await fetch(
-
-            url,
-
-            {
-
-                headers:{
-
-                    Authorization:
-
-                    "Bearer "+token
-
-                }
-
+        {
+            headers:{
+                Authorization:
+                "Bearer "+token
             }
+        }
 
-        )
+    )
 
-    const lista=
-
-        await res.json()
+    const lista =
+    await res.json()
 
     let html=""
 
@@ -228,28 +275,53 @@ async function carregar(){
 
         html+=`
 
-<tr>
+        <tr>
 
-<td>${r.apartamento}</td>
+            <td>${r.apartamento}</td>
 
-<td>${r.lado}</td>
+            <td>${r.andar}</td>
 
-<td>${data(r.inicio)}</td>
+            <td>${r.lado}</td>
 
-<td>${data(r.fim)}</td>
+            <td>${formatarData(r.inicio)}</td>
 
-<td>${r.tipo}</td>
+            <td>${formatarData(r.fim)}</td>
 
-</tr>
+            <td>${formatarTempo(r.tempo_total)}</td>
 
-`
+            <td class="${
+                r.desligamento=="Automático"
+                ? "desligado"
+                : "manual"
+            }">
+
+                ${r.desligamento}
+
+            </td>
+
+        </tr>
+
+        `
 
     })
 
+    if(html==""){
+
+        html=`
+        <tr>
+
+        <td colspan="7">
+
+        Nenhum registro encontrado
+
+        </td>
+
+        </tr>
+        `
+    }
+
     document.getElementById(
-
         "dados"
-
     ).innerHTML=html
 
 }
@@ -259,5 +331,4 @@ carregar()
 </script>
 
 </body>
-
 </html>
