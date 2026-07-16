@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Histórico</title>
+
+<style>
+
+body{
+
+    margin:0;
+
+    font-family:Arial;
+
+    background:#f2f4ef;
+
+}
+
+.topo{
+
+    background:#5f8136;
+
+    color:white;
+
+    padding:20px;
+
+}
+
+.container{
+
+    width:95%;
+
+    max-width:1200px;
+
+    margin:auto;
+
+    padding:30px;
+
+}
+
+.filtro{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-bottom:20px;
+
+}
+
+input{
+
+    height:40px;
+
+    padding:10px;
+
+}
+
+button{
+
+    height:40px;
+
+    padding:0 20px;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    background:white;
+
+}
+
+th{
+
+    background:#5f8136;
+
+    color:white;
+
+    padding:10px;
+
+}
+
+td{
+
+    padding:10px;
+
+    border-bottom:1px solid #ddd;
+
+    text-align:center;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="topo">
+
+<h2>Histórico de Utilização</h2>
+
+</div>
+
+<div class="container">
+
+<div class="filtro">
+
+<input
+id="apartamento"
+placeholder="Apartamento">
+
+<button onclick="carregar()">
+
+Pesquisar
+
+</button>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Apartamento</th>
+
+<th>Lado</th>
+
+<th>Ligou</th>
+
+<th>Desligou</th>
+
+<th>Tipo</th>
+
+</tr>
+
+</thead>
+
+<tbody id="dados">
+
+</tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const API="https://exaustores-production.up.railway.app"
+
+const token=localStorage.getItem("token")
+
+function data(ts){
+
+    if(!ts) return "-"
+
+    return new Date(ts*1000).toLocaleString()
+
+}
+
+async function carregar(){
+
+    let apto=
+
+        document.getElementById(
+
+            "apartamento"
+
+        ).value
+
+    let url=
+
+        `${API}/sindico/historico`
+
+    if(apto)
+
+        url+=`?apartamento=${apto}`
+
+    const res=
+
+        await fetch(
+
+            url,
+
+            {
+
+                headers:{
+
+                    Authorization:
+
+                    "Bearer "+token
+
+                }
+
+            }
+
+        )
+
+    const lista=
+
+        await res.json()
+
+    let html=""
+
+    lista.forEach(r=>{
+
+        html+=`
+
+<tr>
+
+<td>${r.apartamento}</td>
+
+<td>${r.lado}</td>
+
+<td>${data(r.inicio)}</td>
+
+<td>${data(r.fim)}</td>
+
+<td>${r.tipo}</td>
+
+</tr>
+
+`
+
+    })
+
+    document.getElementById(
+
+        "dados"
+
+    ).innerHTML=html
+
+}
+
+carregar()
+
+</script>
+
+</body>
+
+</html>
