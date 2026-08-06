@@ -233,16 +233,27 @@ select{
 
     <h1>Painel do Síndico</h1>
 
-    <div style="display:flex;gap:10px;">
-
+    <div style="display:flex;align-items:center;gap:15px;">
+    
+        <span id="statusHardware"
+              style="
+                font-weight:bold;
+                background:white;
+                color:#333;
+                padding:8px 12px;
+                border-radius:20px;
+              ">
+            🔴 Offline
+        </span>
+    
         <button onclick="window.location='historico.html'">
             📋 Histórico
         </button>
-
+    
         <button onclick="logout()">
             Sair
         </button>
-
+    
     </div>
 
 </div>
@@ -395,7 +406,22 @@ async function carregar(){
 
         const status =
             await resStatus.json()
-
+        const hw =
+            document.getElementById(
+                "statusHardware"
+            )
+        
+        if(status.hardware.online){
+        
+            hw.innerHTML =
+                "🟢 Raspberry Online"
+        
+        }else{
+        
+            hw.innerHTML =
+                "🔴 Raspberry Offline"
+        
+        }
         // CONFIG
         const resConfig =
             await fetch(
