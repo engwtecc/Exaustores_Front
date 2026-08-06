@@ -107,7 +107,43 @@ body{
 .desligado{
     color:red;
 }
+.hardware-status{
 
+    margin:15px 0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:15px;
+
+    color:#555;
+}
+
+.bola{
+
+    width:14px;
+
+    height:14px;
+
+    border-radius:50%;
+
+    display:inline-block;
+}
+
+.bola-verde{
+
+    background:#2ecc71;
+}
+
+.bola-cinza{
+
+    background:#bdbdbd;
+}
 .card button{
 
     width:100%;
@@ -471,7 +507,15 @@ async function carregar(){
             const texto = ligado
                 ? "LIGADO"
                 : "DESLIGADO"
-
+            
+            const retorno =
+                status.hardware.estado[lado]
+            
+            const bola =
+                retorno
+                    ? "bola-verde"
+                    : "bola-cinza"
+            
             cards.innerHTML += `
 
             <div class="card">
@@ -488,7 +532,15 @@ async function carregar(){
                 ">
                     ${texto}
                 </div>
-
+                
+                <div class="hardware-status">
+                
+                    <span class="bola ${bola}"></span>
+                
+                    Retorno Raspberry
+                
+                </div>
+                
                 <div style="
                     display:flex;
                     flex-direction:column;
