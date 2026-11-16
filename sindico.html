@@ -352,6 +352,33 @@ select{
 
         </div>
 
+        <!-- TEMPO PARA FUMAR -->
+        <div class="config-card">
+
+            <h2>
+                Tempo Máximo para Fumar
+            </h2>
+
+            <label>
+                Minutos
+            </label>
+
+            <input
+                type="number"
+                id="maxMinutosFumar"
+                min="1"
+                max="1440"
+            >
+
+            <button
+                class="salvar"
+                onclick="salvarMaxMinutosFumar()"
+            >
+                Salvar
+            </button>
+
+        </div>
+
     </div>
 
     <!-- APARTAMENTOS -->
@@ -598,6 +625,16 @@ async function carregar(){
                 "maxHoras"
             ).value =
             config.max_horas_morador
+        }
+
+        if(
+            document.activeElement.id !==
+            "maxMinutosFumar"
+        ){
+            document.getElementById(
+                "maxMinutosFumar"
+            ).value =
+            config.max_minutos_fumar || 10
         }
 
         // =========================
@@ -853,6 +890,45 @@ async function salvarMaxHoras(){
     }catch(e){
 
         console.log(e)
+    }
+}
+
+async function salvarMaxMinutosFumar(){
+
+    const minutos = Number(
+        document.getElementById(
+            "maxMinutosFumar"
+        ).value
+    )
+
+    if(!Number.isInteger(minutos) || minutos < 1 || minutos > 1440){
+        alert("Informe um tempo entre 1 e 1440 minutos.")
+        return
+    }
+
+    try{
+        const res = await fetch(
+            `${API}/sindico/config/max-minutos-fumar`,
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":"Bearer " + token
+                },
+                body:JSON.stringify({minutos})
+            }
+        )
+
+        if(!res.ok){
+            const erro = await res.json()
+            throw new Error(erro.detail || "Não foi possível salvar")
+        }
+
+        alert("Tempo máximo para fumar atualizado!")
+        carregar()
+
+    }catch(e){
+        alert(e.message || "Erro ao salvar o tempo para fumar")
     }
 }
 
