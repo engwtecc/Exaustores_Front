@@ -418,6 +418,8 @@ async function carregar(){
 
         const solicitando =
             !!minhaSolicitacao
+        const tipoUsoAtivo =
+            minhaSolicitacao?.tipo_uso || "churrasco"
 
         const html = `
 
@@ -449,11 +451,24 @@ async function carregar(){
                 }
             </div>
 
+            ${!solicitando ? `
+                <div class="info" style="margin-top:10px;">
+                    <b>Qual será o uso do exaustor?</b>
+                    <label style="display:block;margin-top:14px;">
+                        <input type="radio" name="tipoUso" value="churrasco" checked style="width:auto;height:auto;margin:0 8px 0 0;">
+                        🍖 Churrasco
+                    </label>
+                    <label style="display:block;margin-top:12px;">
+                        <input type="radio" name="tipoUso" value="fumar" style="width:auto;height:auto;margin:0 8px 0 0;">
+                        🚬 Fumar
+                    </label>
+                </div>
+            ` : ""}
+
             <button
                 class="btn"
-                onclick="
-                toggle(${solicitando})
-                "
+                onclick="toggle(${solicitando})"
+                style="margin-top:15px;"
             >
                 ${
                     solicitando
@@ -478,7 +493,7 @@ async function carregar(){
 
                 ${
                     solicitando
-                    ? "ATIVA"
+                    ? "ATIVA (" + (tipoUsoAtivo === "fumar" ? "Fumar" : "Churrasco") + ")"
                     : "INATIVA"
                 }
             </div>
@@ -505,6 +520,10 @@ async function toggle(
         ? "desligar"
         : "ligar"
 
+    const tipoUso = solicitando
+        ? "churrasco"
+        : (document.querySelector('input[name="tipoUso"]:checked')?.value || "churrasco")
+
     await fetch(
         `${API}/acao`,
         {
@@ -519,7 +538,8 @@ async function toggle(
             },
 
             body:JSON.stringify({
-                acao
+                acao,
+                tipo_uso: tipoUso
             })
         }
     )
