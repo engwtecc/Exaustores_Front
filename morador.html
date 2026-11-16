@@ -107,6 +107,11 @@ body{
     cursor:pointer;
 }
 
+.btn:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+}
+
 .info{
 
     margin-top:25px;
@@ -263,6 +268,12 @@ parseJwt(token)
 const apartamento =
 payload.sub
 let editando = false
+let tipoUsoSelecionado = "churrasco"
+let enviandoAcao = false
+
+function selecionarTipoUso(tipo) {
+    tipoUsoSelecionado = tipo
+}
 function pegarLadoApartamento(apto){
 
     const txt =
@@ -451,30 +462,48 @@ async function carregar(){
                 }
             </div>
 
-            ${!solicitando ? `
-                <div class="info" style="margin-top:10px;">
-                    <b>Qual será o uso do exaustor?</b>
-                    <label style="display:block;margin-top:14px;">
-                        <input type="radio" name="tipoUso" value="churrasco" checked style="width:auto;height:auto;margin:0 8px 0 0;">
-                        🍖 Churrasco
-                    </label>
-                    <label style="display:block;margin-top:12px;">
-                        <input type="radio" name="tipoUso" value="fumar" style="width:auto;height:auto;margin:0 8px 0 0;">
-                        🚬 Fumar
-                    </label>
-                </div>
-            ` : ""}
+            <div class="info" style="margin-top:10px;">
+                <b>Qual será o uso do exaustor?</b>
+                ${
+                    solicitando
+                    ? `<div style="margin-top:14px;font-weight:normal;">
+                           ${tipoUsoAtivo === "fumar" ? "🚬 Fumar" : "🍖 Churrasco"} (solicitação ativa)
+                       </div>`
+                    : `
+                        <label style="display:block;margin-top:14px;text-align:left;">
+                            <input type="radio" name="tipoUso" value="churrasco"
+                                ${tipoUsoSelecionado === "churrasco" ? "checked" : ""}
+                                onchange="selecionarTipoUso(this.value)"
+                                style="width:auto;height:auto;margin:0 8px 0 0;">
+                            🍖 Churrasco
+                        </label>
+                        <label style="display:block;margin-top:12px;text-align:left;">
+                            <input type="radio" name="tipoUso" value="fumar"
+                                ${tipoUsoSelecionado === "fumar" ? "checked" : ""}
+                                onchange="selecionarTipoUso(this.value)"
+                                style="width:auto;height:auto;margin:0 8px 0 0;">
+                            🚬 Fumar
+                        </label>
+                    `
+                }
+            </div>
 
             <button
                 class="btn"
-                onclick="toggle(${solicitando})"
+                onclick="ligarExaustor()"
+                ${solicitando || enviandoAcao ? "disabled" : ""}
                 style="margin-top:15px;"
             >
-                ${
-                    solicitando
-                    ? "Cancelar Solicitação"
-                    : "Solicitar Ligação"
-                }
+                Ligar exaustor
+            </button>
+
+            <button
+                class="btn"
+                onclick="desligarExaustor()"
+                ${!solicitando || enviandoAcao ? "disabled" : ""}
+                style="margin-top:10px;background:#b33a3a;"
+            >
+                Desligar exaustor
             </button>
 
             <div class="info">
@@ -511,40 +540,49 @@ async function carregar(){
 }
 
 
-async function toggle(
-    solicitando
-){
+async function enviarAcao(acao, tipoUso = "churrasco") {
+    if (enviandoAcao) return;
 
-    const acao =
-        solicitando
-        ? "desligar"
-        : "ligar"
+    enviandoAcao = true;
+    carregar();
 
-    const tipoUso = solicitando
-        ? "churrasco"
-        : (document.querySelector('input[name="tipoUso"]:checked')?.value || "churrasco")
-
-    await fetch(
-        `${API}/acao`,
-        {
-            method:"POST",
-
-            headers:{
-                "Content-Type":
-                "application/json",
-
-                Authorization:
-                "Bearer " + token
+    try {
+        const resposta = await fetch(`${API}/acao`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
             },
-
-            body:JSON.stringify({
-                acao,
+            body: JSON.stringify({
+                acao: acao,
                 tipo_uso: tipoUso
             })
-        }
-    )
+        });
 
-    carregar()
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.ok === false) {
+            throw new Error(dados.detail || "Não foi possível executar a solicitação.");
+        }
+
+        if (acao === "ligar") {
+            tipoUsoSelecionado = tipoUso;
+        }
+
+    } catch (e) {
+        alert(e.message || "Erro ao comunicar com o servidor.");
+    } finally {
+        enviandoAcao = false;
+        carregar();
+    }
+}
+
+function ligarExaustor() {
+    enviarAcao("ligar", tipoUsoSelecionado);
+}
+
+function desligarExaustor() {
+    enviarAcao("desligar");
 }
 
 function logout(){
