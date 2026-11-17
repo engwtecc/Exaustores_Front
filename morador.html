@@ -265,10 +265,10 @@ function parseJwt(token){
 const payload =
 parseJwt(token)
 
-const apartamento =
-payload.sub
+const apartamento = String(payload.sub).trim()
 let editando = false
-let tipoUsoSelecionado = "churrasco"
+// Apartamento 2502 inicia com Fumar; os demais iniciam com Churrasco.
+let tipoUsoSelecionado = apartamento === "2502" ? "fumar" : "churrasco"
 let enviandoAcao = false
 
 function selecionarTipoUso(tipo) {
@@ -467,7 +467,7 @@ async function carregar(){
                 ${
                     solicitando
                     ? `<div style="margin-top:14px;font-weight:normal;">
-                           ${tipoUsoAtivo === "fumar" ? "🚬 Fumar" : "🍖 Churrasco"} (solicitação ativa)
+                           ${tipoUsoAtivo === "fumar" ? "⚡ Uso Rápido" : "🍖 Churrasco"} (solicitação ativa)
                        </div>`
                     : `
                         <label style="display:block;margin-top:14px;text-align:left;">
@@ -482,7 +482,7 @@ async function carregar(){
                                 ${tipoUsoSelecionado === "fumar" ? "checked" : ""}
                                 onchange="selecionarTipoUso(this.value)"
                                 style="width:auto;height:auto;margin:0 8px 0 0;">
-                            🚬 Fumar
+                            ⚡ Uso Rápido
                         </label>
                     `
                 }
@@ -522,7 +522,7 @@ async function carregar(){
 
                 ${
                     solicitando
-                    ? "ATIVA (" + (tipoUsoAtivo === "fumar" ? "Fumar" : "Churrasco") + ")"
+                    ? "ATIVA (" + (tipoUsoAtivo === "fumar" ? "Uso Rápido" : "Churrasco") + ")"
                     : "INATIVA"
                 }
             </div>
